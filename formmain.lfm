@@ -1,0 +1,76 @@
+object Form1: TForm1
+  Left = 41
+  Height = 70
+  Top = 154
+  Width = 406
+  BorderStyle = bsSingle
+  Caption = 'Form1'
+  ClientHeight = 50
+  ClientWidth = 406
+  Menu = MainMenu1
+  OnCreate = FormCreate
+  LCLVersion = '1.0.14.0'
+  object Panel1: TPanel
+    Left = 0
+    Height = 50
+    Top = 0
+    Width = 406
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 50
+    ClientWidth = 406
+    Color = 4210752
+    ParentColor = False
+    TabOrder = 0
+    object Label1: TLabel
+      Left = 25
+      Height = 1
+      Top = 16
+      Width = 1
+      Font.Color = clWhite
+      ParentColor = False
+      ParentFont = False
+    end
+    object Button1: TButton
+      Left = 312
+      Height = 25
+      Top = 16
+      Width = 83
+      Anchors = [akTop, akRight]
+      Caption = 'New Game'
+      OnClick = Button1Click
+      TabOrder = 0
+      Visible = False
+    end
+  end
+  object MainMenu1: TMainMenu
+    left = 62
+    top = 14
+    object MenuItem1: TMenuItem
+      Caption = 'File'
+      OnClick = MenuItem1Click
+      object MenuItem2: TMenuItem
+        Caption = 'Start New Game'
+        object MenuItem3: TMenuItem
+          Caption = '9x9 - 10 Mines'
+          ShortCut = 113
+          OnClick = MenuItem3Click
+        end
+        object MenuItem5: TMenuItem
+          Caption = '16x16 - 40 Mines'
+          ShortCut = 114
+          OnClick = MenuItem5Click
+        end
+        object MenuItem6: TMenuItem
+          Caption = '16x30 - 99 Mines'
+          ShortCut = 115
+          OnClick = MenuItem6Click
+        end
+      end
+      object MenuItem4: TMenuItem
+        Caption = 'Exit'
+        OnClick = MenuItem4Click
+      end
+    end
+  end
+end
