@@ -1,54 +1,67 @@
 object Form1: TForm1
-  Left = 41
-  Height = 70
-  Top = 154
-  Width = 406
-  BorderStyle = bsSingle
+  Left = 253
+  Height = 366
+  Top = 167
+  Width = 451
   Caption = 'Form1'
-  ClientHeight = 50
-  ClientWidth = 406
+  ClientHeight = 346
+  ClientWidth = 451
   Menu = MainMenu1
   OnCreate = FormCreate
+  OnResize = FormResize
   LCLVersion = '1.0.14.0'
   object Panel1: TPanel
     Left = 0
-    Height = 50
-    Top = 0
-    Width = 406
+    Height = 34
+    Top = 312
+    Width = 451
     Align = alBottom
     BevelOuter = bvNone
-    ClientHeight = 50
-    ClientWidth = 406
+    ClientHeight = 34
+    ClientWidth = 451
     Color = 4210752
     ParentColor = False
     TabOrder = 0
     object Label1: TLabel
-      Left = 25
-      Height = 1
-      Top = 16
-      Width = 1
+      Left = 16
+      Height = 16
+      Top = 8
+      Width = 35
+      Caption = 'Label1'
       Font.Color = clWhite
       ParentColor = False
       ParentFont = False
     end
-    object Button1: TButton
-      Left = 312
-      Height = 25
-      Top = 16
-      Width = 83
+    object Label2: TLabel
+      Left = 402
+      Height = 16
+      Top = 8
+      Width = 35
+      Alignment = taRightJustify
       Anchors = [akTop, akRight]
-      Caption = 'New Game'
-      OnClick = Button1Click
-      TabOrder = 0
-      Visible = False
+      Caption = 'Label2'
+      Font.Color = clWhite
+      ParentColor = False
+      ParentFont = False
     end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Height = 312
+    Top = 0
+    Width = 451
+    Align = alClient
+    BevelOuter = bvNone
+    Caption = 'Panel2'
+    Color = clBlack
+    ParentColor = False
+    TabOrder = 1
   end
   object MainMenu1: TMainMenu
     left = 62
     top = 14
     object MenuItem1: TMenuItem
       Caption = 'File'
-      OnClick = MenuItem1Click
       object MenuItem2: TMenuItem
         Caption = 'Start New Game'
         object MenuItem3: TMenuItem
