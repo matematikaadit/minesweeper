@@ -22,6 +22,9 @@ type
     MenuItem4: TMenuItem;
     MenuItem5: TMenuItem;
     MenuItem6: TMenuItem;
+    MenuItem7: TMenuItem;
+    MenuItem8: TMenuItem;
+    MenuItem9: TMenuItem;
     Panel1: TPanel;
     Panel2: TPanel;
     procedure Button1Click(Sender: TObject);
@@ -31,13 +34,19 @@ type
     procedure MenuItem4Click(Sender: TObject);
     procedure MenuItem5Click(Sender: TObject);
     procedure MenuItem6Click(Sender: TObject);
+    procedure MenuItem7Click(Sender: TObject);
+    procedure MenuItem8Click(Sender: TObject);
+    procedure MenuItem9Click(Sender: TObject);
+    procedure Panel2MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer
+      );
   private
   public
+    board: string;
     procedure Initiate;
     procedure OnWin(const TotalTime: integer);
-    Procedure OnLose(const TotalTime: integer);
+    procedure OnLose(const TotalTime: integer);
     procedure OnFlag(const FlagCount: integer; const MinesLeft: integer);
-    Procedure OnTimeInc(const CurrentTime: integer);
+    procedure OnTimeInc(const CurrentTime: integer);
   end;
 
 var
@@ -52,31 +61,31 @@ implementation
 
 procedure Tform1.OnFlag(const FlagCount: integer; const MinesLeft: integer);
 begin
-  Label2.caption := 'Flag Count: '+inttostr(flagCOunt)+' Mines Left: '+inttostr(MinesLeft);
+  Label2.Caption := 'Flag Count: ' + IntToStr(flagCOunt) + ' Mines Left: ' + IntToStr(MinesLeft);
 end;
 
 procedure TForm1.Initiate;
 begin
   Minesweeper := TMinesweeper.Create(@Panel2);
-  Minesweeper.OnLose:= @OnLose;
-  Minesweeper.OnWin:= @OnWin;
-  Minesweeper.OnFlag:= @OnFlag;
-  Minesweeper.OnTimeInc:= @OnTimeInc;
+  Minesweeper.OnLose := @OnLose;
+  Minesweeper.OnWin := @OnWin;
+  Minesweeper.OnFlag := @OnFlag;
+  Minesweeper.OnTimeInc := @OnTimeInc;
 end;
 
-procedure TForm1.OnTimeInc(Const CurrentTime: integer);
+procedure TForm1.OnTimeInc(const CurrentTime: integer);
 begin
-  Label1.Caption := 'Time: '+inttostr(CurrentTime)+' sec(s).';
+  Label1.Caption := 'Time: ' + IntToStr(CurrentTime) + ' sec(s).';
 end;
 
 procedure TForm1.OnWin(const TotalTime: integer);
 begin
-  Showmessage('You won the game in '+IntToStr(totalTime)+' seconds');
+  ShowMessage('You won the game in ' + IntToStr(totalTime) + ' seconds');
 end;
 
 procedure TForm1.OnLose(const TotalTime: integer);
 begin
-  Showmessage('You lost this game. better luck next time.');
+  ShowMessage('You lost this game. better luck next time.');
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -86,8 +95,8 @@ end;
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
-  if minesweeper.gamerunning then
-  Minesweeper.AutoFit;
+  if minesweeper.GameRunning then
+    Minesweeper.AutoFit;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
@@ -97,23 +106,59 @@ end;
 
 procedure TForm1.MenuItem3Click(Sender: TObject);
 begin
-  Minesweeper.StartGame(9,9, 10);
+  board := '9x9';
+  Minesweeper.StartGame(9, 9, 10);
 end;
 
 procedure TForm1.MenuItem4Click(Sender: TObject);
 begin
-  close;
+  Close;
 end;
 
 procedure TForm1.MenuItem5Click(Sender: TObject);
 begin
-  Minesweeper.StartGame(16,16, 40);
+  board := '16x16';
+  Minesweeper.StartGame(16, 16, 40);
 end;
 
 procedure TForm1.MenuItem6Click(Sender: TObject);
 begin
-  Minesweeper.StartGame(16,30, 99);
+  board := '16x30';
+  Minesweeper.StartGame(16, 30, 99);
 end;
+
+procedure TForm1.MenuItem7Click(Sender: TObject);
+begin
+  if board = '9x9' then
+    MenuItem3Click(nil)
+  else if board = '16x16' then
+    MenuItem5Click(nil)
+  else if board = '16x30' then
+    Minesweeper.StartGame(16, 30, 99);
+
+end;
+
+procedure TForm1.MenuItem8Click(Sender: TObject);
+begin
+  Application.MessageBox('Created by: Fata Nugraha'+lineending+'Compiled with fpc 2.62 under Lazarus IDE on windows.'+LineEnding+'Email: fatanugraha@outlook.com / github: fatanugraha / twitter: @cybzx09', 'About', 0);
+end;
+
+procedure TForm1.MenuItem9Click(Sender: TObject);
+var
+  str1, str2, str3: String;
+begin
+  if InputQuery('Custom', 'Width:', str1) then
+    if inputQuery('Custom', 'Height:', str2) then
+      if inputQuery('Custom', 'Mines:', str3) then
+        Minesweeper.StartGame(StrToInt(str2), StrToInt(str1), strtoint(str3));
+end;
+
+procedure TForm1.Panel2MouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+
+end;
+
 
 end.
 

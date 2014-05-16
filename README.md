@@ -6,14 +6,14 @@ this repository contains a simple classic game called minesweeper. written in ob
 FILE DESCRIPTION
 ----------------
 
-#unitminesweeper.pas
+unitminesweeper.pas
 this unit contains the "engine" of this game
 
-#unitminesweeperdefines.pas
+unitminesweeperdefines.pas
 some types declarations
 
-#formmain.pas
+formmain.pas
 this unit contains how to use the unitminesweeper.pas and contains the main form.
 
-#project1.lpr
+project1.lpr
 nothing interesting in this unit.

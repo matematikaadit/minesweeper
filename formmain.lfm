@@ -3,7 +3,7 @@ object Form1: TForm1
   Height = 366
   Top = 167
   Width = 451
-  Caption = 'Form1'
+  Caption = 'https://www.github.com/fatanugraha/minesweeper'
   ClientHeight = 346
   ClientWidth = 451
   Menu = MainMenu1
@@ -56,6 +56,7 @@ object Form1: TForm1
     Color = clBlack
     ParentColor = False
     TabOrder = 1
+    OnMouseMove = Panel2MouseMove
   end
   object MainMenu1: TMainMenu
     left = 62
@@ -79,11 +80,23 @@ object Form1: TForm1
           ShortCut = 115
           OnClick = MenuItem6Click
         end
+        object MenuItem9: TMenuItem
+          Caption = 'Custom ...'
+          OnClick = MenuItem9Click
+        end
       end
       object MenuItem4: TMenuItem
         Caption = 'Exit'
         OnClick = MenuItem4Click
       end
+    end
+    object MenuItem7: TMenuItem
+      Caption = 'New Game'
+      OnClick = MenuItem7Click
+    end
+    object MenuItem8: TMenuItem
+      Caption = 'About'
+      OnClick = MenuItem8Click
     end
   end
 end

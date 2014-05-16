@@ -5,11 +5,10 @@ unit unitMinesweeperDefines;
 interface
 
 uses
-  Classes, SysUtils, ExtCtrls, Controls;
+  Classes, SysUtils, ExtCtrls, Controls, Graphics;
 
 type
   TMinesweeperCell = record
-    Image: TImage;
     opened: boolean;
     Flagged: boolean;
     CellValue: shortint; //if mines hint = 0..8 if bomb = 9
@@ -21,8 +20,9 @@ type
   TMinesweeperFlagProc = procedure(const FlagCount: integer; const MinesLeft: integer) of object;
   TMinesweeperTimeProc = procedure(const CurrentTime: integer) of object;
   TMinesweeperData = array of array of TMinesweeperCell;
-  PWinControl = ^TWinControl;
-
+  TMinesweeperSprites = array of TPicture;
+  PCanvas = ^TCanvas;
+  PCustomControl = ^TCustomControl;
 
 implementation
 

@@ -8,7 +8,7 @@ uses
   {$ifdef unix}
   cthreads, cmem,
   {$endif}
-  Classes, SysUtils, Controls, Forms, Dialogs, ExtCtrls, unitminesweeperdefines;
+  Classes, SysUtils, Controls, Forms, Dialogs, ExtCtrls, Graphics, unitminesweeperdefines;
 
 type
   TMinesweeperTimer = class(TThread)
@@ -27,11 +27,14 @@ type
     FCellHW: integer;
     FSizeH: integer;
     FSizeW: integer;
-    FParent: PWinControl;
+    FParent: PCustomControl;
+    FCanvas: PCanvas;
+    FHover: TPoint;
     FData: TMinesweeperData;
     PWin, PLose: TMinesweeperResultProc;
     PIncTime: TMinesweeperTimeProc;
     PFlag: TMinesweeperFlagProc;
+    FSprites: TMinesweeperSprites;
     FMines: integer;
     FOpenedMax: integer;
     FTimer: TMinesweeperTimer;
@@ -51,10 +54,15 @@ type
     procedure WriteMinesHint;
     procedure DrawBoard;
     procedure OpenCell(x, y: integer); //recursively open cell
-    procedure OnImageClick(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
+    procedure OnMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
+    procedure OnMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
   const
     cvBomb = 9;
-    SpritesDir = '\sprites\';
+    cvFlag = 10;
+    cvNormal = 11;
+    cvWrongFlag = 12;
+    cvHover = 13;
+    SpritesDir = 'sprites';
     FAvoidedRadius = 1;
   public
     GameRunning: boolean;
@@ -64,77 +72,108 @@ type
     property OnFlag: TMinesweeperFlagProc write PFlag;
     procedure StartGame(SizeH, SizeW, Mines: integer);
     procedure StopGame;
-    procedure AutoFit;
+    procedure AutoFit(FromDrawBoard: boolean = False);
     destructor Destroy; override;
-    constructor Create(Parent: PWinControl);
+    constructor Create(Parent: PCustomControl);
   end;
 
 implementation
 
-procedure TMinesweeper.AutoFit;
-// aspect ratio image is 1:1
+procedure TMinesweeper.OnMouseMove(Sender: TObject; Shift: TShiftState; X, Y: integer);
 var
-  x, y, parentH, parentW: integer;
+  ax, ay, bx, by: integer;
+  CellRect: TRect;
 begin
-  parentH := FParent^.Height;
-  parentW := FParent^.Width;
+  if FloseState or FWinState then
+    exit;
+
+  if (x < FLeft) or (x > (FLeft + FCellHW * FSizeW)) then
+    exit;
+
+  if (y < FTop) or (y > (FTop + FCellHW * FSizeh)) then
+    exit;
+
+  ax := (x - FLeft) div FCellHW;
+  ay := (y - FTop) div FCellHW;
+
+  if Fdata[ay, ax].opened or Fdata[ay, ax].flagged then
+    exit;
+
+  bx := FLeft + ax * FCellHW;
+  by := FTop + ay * FcellHw;
+
+  if (FHover.x <> ax) or (FHover.y <> ay) then
+  begin
+    CellRect.Top := by;
+    CellRect.Left := bx;
+    CellRect.Bottom := CellRect.Top + FCellHW;
+    CellRect.Right := CellRect.Left + FCellHW;
+    FCanvas^.StretchDraw(CelLRect, FSprites[cvHover].Graphic);
+    if not (Fdata[fhover.y, fhover.x].opened or Fdata[fhover.y, fhover.x].flagged) then
+    begin
+      CellRect.Top := FTop + FHover.y * FcellHw;
+      CellRect.Left := FLeft + FHover.x * FCellHW;
+      CellRect.Bottom := CellRect.Top + FCellHW;
+      CellRect.Right := CellRect.Left + FCellHW;
+      FCanvas^.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
+    end;
+    FHover.x := ax;
+    FHover.y := ay;
+  end;
+end;
+
+procedure TMinesweeper.AutoFit(FromDrawBoard: boolean = False);
+var
+  parentH, parentW: integer;
+begin
+  parentH := FCanvas^.Height;
+  parentW := FCanvas^.Width;
   if (Parenth div FSizeH) > (parentw div FSizeW) then
     FCellHW := (ParentW div FSizeW)
   else
     FCellHW := (ParentH div FSizeH);
-  FLeft := (ParentW-FSizeW*FCellHW) div 2;
-  FTop := (ParentH-FSizeH*FCellHW) div 2;
+  FLeft := (ParentW - FSizeW * FCellHW) div 2;
+  FTop := (ParentH - FSizeH * FCellHW) div 2;
 
-  for y := 0 to FSizeH-1 do
-    for x := 0 to FSizeW-1 do begin
-      FData[y,x].iMage.Height := FCellHW;
-      FData[y,x].iMage.Width := FCellHW;
-      Fdata[y,x].Image.Left := FLeft+(x*FCellHW);
-      Fdata[y,x].Image.Top := FTop+(y*FCellHW);
-    end;
+  if not fromdrawboard then
+    DrawBoard;
 end;
 
 procedure TMinesweeper.RevealBombs;
 var
-  x,y: integer;
+  CellRect: TRect;
+  x, y: integer;
 begin
   for y := 0 to High(FData) do
-    for x := 0 to high(FData[y]) do begin
-      if (FData[y,x].CellValue = cvBomb) and not(FData[y,x].Flagged) then
-        FData[y, x].Image.Picture.LoadFromFile(ExtractFilePath(application.exename) + SpritesDir + 'bomb.png')
-      else if (FData[y,x].CellValue <> cvBomb) and (FData[y,x].Flagged) then
-        FData[y, x].Image.Picture.LoadFromFile(ExtractFilePath(application.exename) + SpritesDir + 'wrong flag.png')
+    for x := 0 to high(FData[y]) do
+    begin
+      if (FData[y, x].CellValue = cvBomb) and not (FData[y, x].Flagged) then
+      begin
+        CellRect.Top := FTop + y * FcellHw;
+        CellRect.Left := FLeft + x * FCellHW;
+        CellRect.Bottom := CellRect.Top + FCellHW;
+        CellRect.Right := CellRect.Left + FCellHW;
+        FCanvas^.StretchDraw(CellRect, FSprites[cvBomb].Graphic);
+      end
+      else if (FData[y, x].CellValue <> cvBomb) and (FData[y, x].Flagged) then
+      begin
+        CellRect.Top := FTop + y * FcellHw;
+        CellRect.Left := FLeft + x * FCellHW;
+        CellRect.Bottom := CellRect.Top + FCellHW;
+        CellRect.Right := CellRect.Left + FCellHW;
+        FCanvas^.StretchDraw(CellRect, FSprites[cvWrongFlag].Graphic);
+      end;
     end;
 end;
 
 procedure TMinesweeper.InitializeData;
-var
-  y, x: integer;
 begin
-  for y := 0 to High(FData) do
-  begin
-    if y >= FSizeH then
-      for x := 0 to High(FData[y]) do
-        Fdata[y, x].Image.Free
-    else
-      for x := FSizeW to High(Fdata[y]) do
-        FData[y, x].Image.Free;
-  end;
-
+  TPanel(FParent^).OnMouseUp := @OnMouseUp;
+  //TPanel(FParent^).OnMouseMove := @OnMouseMove;
   SetLength(FData, FSizeH, FSizeW);
-  for y := 0 to FSizeH - 1 do
-    for x := 0 to FSizeW - 1 do
-    begin
-      with FData[y, x] do
-      begin
-        if Assigned(Image) then
-          continue;
-        Image := TImage.Create(FParent^);
-        Image.Stretch := true;
-        Image.Name := 'x' + IntToStr(x) + 'y' + IntToStr(y);
-        Image.Parent := FParent^;
-      end;
-    end;
+
+  FCanvas^.Brush.Color := clBlack;
+  FCanvas^.FillRect(0, 0, FCanvas^.Width, FCanvas^.Height);
 end;
 
 procedure TMinesweeper.InitVariables;
@@ -159,10 +198,17 @@ begin
 end;
 
 procedure TMinesweeper.OpenCell(x, y: integer);
+var
+  CellRect: TRect;
 begin
   if not (FWinState or FLoseState) then
     if not ((x = -1) or (y = -1) or (x = FSizeW) or (y = FSizeH)) then
     begin
+      CellRect.Top := FTop + y * FcellHw;
+      CellRect.Left := FLeft + x * FCellHW;
+      CellRect.Bottom := CellRect.Top + FCellHW;
+      CellRect.Right := CellRect.Left + FCellHW;
+
       if FData[y, x].Flagged then
         exit;
 
@@ -173,8 +219,7 @@ begin
 
       if (FData[y, x].cellValue = 0) then
       begin
-        FData[y, x].Image.Picture.loadFromFile(ExtractFilePath(application.exename) + SpritesDir +
-          IntToStr(Fdata[y, x].cellvalue) + '.png');
+        FCanvas^.StretchDraw(CellRect, FSprites[Fdata[y, x].cellValue].Graphic);
         FData[y, x].opened := True;
         OPenCell(x - 1, y - 1);
         OPenCell(x - 1, y);
@@ -188,18 +233,16 @@ begin
 
       else if (FData[y, x].cellValue <> cvBomb) then
       begin
-        FData[y, x].Image.Picture.loadFromFile(ExtractFilePath(application.exename) + SpritesDir +
-          IntToStr(Fdata[y, x].cellvalue) + '.png');
+        FCanvas^.StretchDraw(CellRect, FSprites[Fdata[y, x].cellValue].Graphic);
         FData[y, x].Opened := True;
       end
       else
       begin
         FData[y, x].Opened := True;
-        FData[y, x].Image.Picture.loadFromFile(ExtractFilePath(application.exename) + SpritesDir + 'bomb.png');
+        FCanvas^.StretchDraw(CellRect, FSprites[cvBomb].Graphic);
         FLoseState := True;
         StopGame;
       end;
-      FParent^.Update;
     end;
 
   if (FOpenedCount = FOpenedMax) and not (FWinState) then
@@ -211,9 +254,11 @@ end;
 
 procedure TMinesweeper.StopGame;
 begin
-  GameRunning := false;
-  FTimer.Terminate;
-  if FLoseState then begin
+  GameRunning := False;
+  if Assigned(FTimer) then
+    FTimer.Terminate;
+  if FLoseState then
+  begin
     RevealBombs;
     PLose(FTimeCount);
   end
@@ -221,7 +266,7 @@ begin
     PWin(FTimeCount);
 end;
 
-procedure TMinesweeper.OnImageClick(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
+procedure TMinesweeper.OnMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
 
   function CheckCell(x, y: integer): boolean;
   begin
@@ -258,15 +303,22 @@ procedure TMinesweeper.OnImageClick(Sender: TObject; Button: TMouseButton; Shift
   end;
 
 var
-  ax, ay: integer;
-  tmp: string;
+  bx, by, ax, ay: integer;
+  CellRect: TRect;
 begin
-  if FLoseState or FWinState then
+  if (x < FLeft) or (x > (FLeft + FCellHW * FSizeW)) then
+    exit;
+  if (y < FTop) or (y > (FTop + FCellHW * FSizeh)) then
     exit;
 
-  tmp := TImage(Sender).Name;
-  ax := StrToInt(Copy(tmp, Pos('x', tmp) + 1, Pos('y', tmp) - (Pos('x', tmp) + 1)));
-  ay := StrToInt(Copy(tmp, Pos('y', tmp) + 1, Length(tmp) - (Pos('y', tmp))));
+  if FloseState or FWinState then
+    exit;
+
+  ax := (x - FLeft) div FCellHW;
+  ay := (y - FTop) div FCellHW;
+
+  bx := FLeft + ax * FCellHW;
+  by := FTop + ay * FcellHw;
   if Button = mbLeft then
   begin
 
@@ -291,39 +343,51 @@ begin
       RandomizeMines(ax, ay, 1);
       WriteMinesHint;
       FFirstClick := False;
+      FTimer := TMinesweeperTimer.Create(@FTimeCount, PIncTime);
     end;
     OpenCell(ax, ay);
-    FParent^.update;
   end
   else
   begin
     if not FData[ay, ax].Opened then
+    begin
+      CellRect.Top := by;
+      CellRect.Left := bx;
+      CellRect.Bottom := by + FCellHW;
+      CellRect.Right := bx + FCellHW;
       if FData[ay, ax].flagged then
       begin
         FData[ay, ax].flagged := False;
-        FData[ay, ax].Image.Picture.LoadFromFile(ExtractFilePath(application.exename) + SpritesDir + 'normal.png');
+        FCanvas^.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
         Dec(FFlagCount);
         PFlag(FFlagCount, FMines - FFlagCount);
       end
       else
       begin
         FData[ay, ax].flagged := True;
-        FData[ay, ax].Image.Picture.LoadFromFile(ExtractFilePath(application.exename) + SpritesDir + 'flag.png');
+        FCanvas^.StretchDraw(CellRect, FSprites[cvFlag].Graphic);
         Inc(FFlagCount);
         PFlag(FFlagCount, FMines - FFlagCount);
       end;
+    end;
   end;
 end;
 
 procedure TMinesweeper.DrawBoard;
 var
   x, y: integer;
+  CellRect: TRect;
 begin
+  AutoFit(True);
+
   for y := 0 to FSizeH - 1 do
     for x := 0 to FSizeW - 1 do
     begin
-      FData[y, x].Image.Picture.LoadFromFile(ExtractFilePath(application.exename) + SpritesDir + 'normal.png');
-      FData[y, x].Image.OnMouseDown := @OnImageClick;
+      CellRect.Left := FLeft + (FCellHW * x);
+      CellRect.Top := FTop + (FCellHW * y);
+      CellRect.Bottom := FTop + (FCellHW * y) + FCellHW;
+      CellRect.Right := FLeft + (FCellHW * x) + FCellHW;
+      FCanvas^.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
     end;
 end;
 
@@ -418,24 +482,34 @@ begin
   end;
   InitVariables;
   DrawBoard;
-  FTimer := TMinesweeperTimer.Create(@FTimeCount, PIncTime);
-  GameRunning := true;
+  GameRunning := True;
 end;
 
-constructor TMinesweeper.Create(Parent: PWinControl);
+constructor TMinesweeper.Create(Parent: PCustomControl);
+const
+  SpritesCount = 14;
+var
+  i: integer;
 begin
   inherited Create;
   FParent := Parent;
+  FCanvas := @Parent^.Canvas;
+  SetLength(FSprites, SpritesCount);
+  for i := 0 to SpritesCount - 1 do
+  begin
+    FSprites[i] := TPicture.Create;
+    FSprites[i].LoadFromFile(ExpandFileName(SpritesDir) + '\' + IntToStr(i) + '.png');
+  end;
 end;
 
 destructor TMinesweeper.Destroy;
 var
-  i, j: integer;
+  i: integer;
 begin
-  for i := Low(FData) to High(FData) do
-    for j := Low(FData[i]) to High(FData[i]) do
-      FData[i, j].Image.Free;
   SetLength(FData, 0);
+  for i := 0 to High(FSprites) do
+    FSprites[i].Free;
+
   inherited Destroy;
 end;
 
@@ -449,20 +523,21 @@ end;
 
 procedure TMinesweeperTimer.UpdateTime;
 begin
-  if not terminated then begin
-    inc(PTime^);
+  if not terminated then
+  begin
+    Inc(PTime^);
     FOnInc(PTime^);
   end;
 end;
 
 procedure TMinesweeperTimer.Execute;
 begin
-  FreeOnTerminate := true;
-  while not terminated do begin
+  FreeOnTerminate := True;
+  while not terminated do
+  begin
     Sleep(1000);
     Synchronize(@UpdateTime);
   end;
 end;
 
 end.
-
