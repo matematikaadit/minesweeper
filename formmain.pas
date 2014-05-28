@@ -13,6 +13,7 @@ type
   { TForm1 }
 
   TForm1 = class(TForm)
+    Button1: TButton;
     Label1: TLabel;
     Label2: TLabel;
     MainMenu1: TMainMenu;
@@ -27,9 +28,9 @@ type
     MenuItem9: TMenuItem;
     Panel1: TPanel;
     Panel2: TPanel;
+    Refresher: TTimer;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
     procedure MenuItem5Click(Sender: TObject);
@@ -37,9 +38,8 @@ type
     procedure MenuItem7Click(Sender: TObject);
     procedure MenuItem8Click(Sender: TObject);
     procedure MenuItem9Click(Sender: TObject);
-    procedure Panel2MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer
-      );
-  private
+    procedure Panel2Resize(Sender: TObject);
+    procedure RefresherTimer(Sender: TObject);
   public
     board: string;
     procedure Initiate;
@@ -90,18 +90,13 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  WindowState := wsMaximized;
   Initiate;
-end;
-
-procedure TForm1.FormResize(Sender: TObject);
-begin
-  if minesweeper.GameRunning then
-    Minesweeper.AutoFit;
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-
+  minesweeper.Autofit;
 end;
 
 procedure TForm1.MenuItem3Click(Sender: TObject);
@@ -135,7 +130,6 @@ begin
     MenuItem5Click(nil)
   else if board = '16x30' then
     Minesweeper.StartGame(16, 30, 99);
-
 end;
 
 procedure TForm1.MenuItem8Click(Sender: TObject);
@@ -153,12 +147,17 @@ begin
         Minesweeper.StartGame(StrToInt(str2), StrToInt(str1), strtoint(str3));
 end;
 
-procedure TForm1.Panel2MouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
+procedure TForm1.Panel2Resize(Sender: TObject);
 begin
-
+  Refresher.Enabled := true;
 end;
 
+procedure TForm1.RefresherTimer(Sender: TObject);
+begin
+  Refresher.Enabled := false;
+  if minesweeper.GameRunning then
+    Minesweeper.AutoFit;
+end;
 
 end.
 

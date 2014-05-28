@@ -5,9 +5,6 @@ unit unitMinesweeper;
 interface
 
 uses
-  {$ifdef unix}
-  cthreads, cmem,
-  {$endif}
   Classes, SysUtils, Controls, Forms, Dialogs, ExtCtrls, Graphics, unitminesweeperdefines;
 
 type
@@ -27,8 +24,7 @@ type
     FCellHW: integer;
     FSizeH: integer;
     FSizeW: integer;
-    FParent: PCustomControl;
-    FCanvas: PCanvas;
+    FParent: PPanel;
     FHover: TPoint;
     FData: TMinesweeperData;
     PWin, PLose: TMinesweeperResultProc;
@@ -74,7 +70,7 @@ type
     procedure StopGame;
     procedure AutoFit(FromDrawBoard: boolean = False);
     destructor Destroy; override;
-    constructor Create(Parent: PCustomControl);
+    constructor Create(Parent: PPanel);
   end;
 
 implementation
@@ -108,14 +104,14 @@ begin
     CellRect.Left := bx;
     CellRect.Bottom := CellRect.Top + FCellHW;
     CellRect.Right := CellRect.Left + FCellHW;
-    FCanvas^.StretchDraw(CelLRect, FSprites[cvHover].Graphic);
+    FParent^.Canvas.StretchDraw(CelLRect, FSprites[cvHover].Graphic);
     if not (Fdata[fhover.y, fhover.x].opened or Fdata[fhover.y, fhover.x].flagged) then
     begin
       CellRect.Top := FTop + FHover.y * FcellHw;
       CellRect.Left := FLeft + FHover.x * FCellHW;
       CellRect.Bottom := CellRect.Top + FCellHW;
       CellRect.Right := CellRect.Left + FCellHW;
-      FCanvas^.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
+      FParent^.Canvas.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
     end;
     FHover.x := ax;
     FHover.y := ay;
@@ -126,8 +122,8 @@ procedure TMinesweeper.AutoFit(FromDrawBoard: boolean = False);
 var
   parentH, parentW: integer;
 begin
-  parentH := FCanvas^.Height;
-  parentW := FCanvas^.Width;
+  parentH := FParent^.Canvas.Height;
+  parentW := FParent^.Canvas.Width;
   if (Parenth div FSizeH) > (parentw div FSizeW) then
     FCellHW := (ParentW div FSizeW)
   else
@@ -153,7 +149,7 @@ begin
         CellRect.Left := FLeft + x * FCellHW;
         CellRect.Bottom := CellRect.Top + FCellHW;
         CellRect.Right := CellRect.Left + FCellHW;
-        FCanvas^.StretchDraw(CellRect, FSprites[cvBomb].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[cvBomb].Graphic);
       end
       else if (FData[y, x].CellValue <> cvBomb) and (FData[y, x].Flagged) then
       begin
@@ -161,19 +157,18 @@ begin
         CellRect.Left := FLeft + x * FCellHW;
         CellRect.Bottom := CellRect.Top + FCellHW;
         CellRect.Right := CellRect.Left + FCellHW;
-        FCanvas^.StretchDraw(CellRect, FSprites[cvWrongFlag].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[cvWrongFlag].Graphic);
       end;
     end;
 end;
 
 procedure TMinesweeper.InitializeData;
 begin
-  TPanel(FParent^).OnMouseUp := @OnMouseUp;
-  //TPanel(FParent^).OnMouseMove := @OnMouseMove;
+  TImage(FParent^).OnMouseUp := @OnMouseUp;
   SetLength(FData, FSizeH, FSizeW);
 
-  FCanvas^.Brush.Color := clBlack;
-  FCanvas^.FillRect(0, 0, FCanvas^.Width, FCanvas^.Height);
+  FParent^.Canvas.Brush.Color := clBlack;
+  FParent^.Canvas.FillRect(0, 0, FParent^.Canvas.Width, FParent^.Canvas.Height);
 end;
 
 procedure TMinesweeper.InitVariables;
@@ -219,7 +214,7 @@ begin
 
       if (FData[y, x].cellValue = 0) then
       begin
-        FCanvas^.StretchDraw(CellRect, FSprites[Fdata[y, x].cellValue].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[Fdata[y, x].cellValue].Graphic);
         FData[y, x].opened := True;
         OPenCell(x - 1, y - 1);
         OPenCell(x - 1, y);
@@ -233,13 +228,13 @@ begin
 
       else if (FData[y, x].cellValue <> cvBomb) then
       begin
-        FCanvas^.StretchDraw(CellRect, FSprites[Fdata[y, x].cellValue].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[Fdata[y, x].cellValue].Graphic);
         FData[y, x].Opened := True;
       end
       else
       begin
         FData[y, x].Opened := True;
-        FCanvas^.StretchDraw(CellRect, FSprites[cvBomb].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[cvBomb].Graphic);
         FLoseState := True;
         StopGame;
       end;
@@ -358,14 +353,14 @@ begin
       if FData[ay, ax].flagged then
       begin
         FData[ay, ax].flagged := False;
-        FCanvas^.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
         Dec(FFlagCount);
         PFlag(FFlagCount, FMines - FFlagCount);
       end
       else
       begin
         FData[ay, ax].flagged := True;
-        FCanvas^.StretchDraw(CellRect, FSprites[cvFlag].Graphic);
+        FParent^.Canvas.StretchDraw(CellRect, FSprites[cvFlag].Graphic);
         Inc(FFlagCount);
         PFlag(FFlagCount, FMines - FFlagCount);
       end;
@@ -387,7 +382,7 @@ begin
       CellRect.Top := FTop + (FCellHW * y);
       CellRect.Bottom := FTop + (FCellHW * y) + FCellHW;
       CellRect.Right := FLeft + (FCellHW * x) + FCellHW;
-      FCanvas^.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
+      FParent^.Canvas.StretchDraw(CellRect, FSprites[cvNormal].Graphic);
     end;
 end;
 
@@ -485,7 +480,7 @@ begin
   GameRunning := True;
 end;
 
-constructor TMinesweeper.Create(Parent: PCustomControl);
+constructor TMinesweeper.Create(Parent: PPanel);
 const
   SpritesCount = 14;
 var
@@ -493,12 +488,16 @@ var
 begin
   inherited Create;
   FParent := Parent;
-  FCanvas := @Parent^.Canvas;
   SetLength(FSprites, SpritesCount);
   for i := 0 to SpritesCount - 1 do
   begin
     FSprites[i] := TPicture.Create;
-    FSprites[i].LoadFromFile(ExpandFileName(SpritesDir) + '\' + IntToStr(i) + '.png');
+    {$IFDEF Linux}
+      FSprites[i].LoadFromFile(ExpandFileName(SpritesDir) + '/' + IntToStr(i) + '.png');
+    {$ENDIF}
+    {$IFDEF WINDOWS}
+      FSprites[i].LoadFromFile(ExpandFileName(SpritesDir) + '\' + IntToStr(i) + '.png');
+    {$ENDIF}
   end;
 end;
 

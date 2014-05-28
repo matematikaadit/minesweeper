@@ -8,7 +8,6 @@ object Form1: TForm1
   ClientWidth = 451
   Menu = MainMenu1
   OnCreate = FormCreate
-  OnResize = FormResize
   LCLVersion = '1.0.14.0'
   object Panel1: TPanel
     Left = 0
@@ -44,6 +43,15 @@ object Form1: TForm1
       ParentColor = False
       ParentFont = False
     end
+    object Button1: TButton
+      Left = 133
+      Height = 25
+      Top = 12
+      Width = 75
+      Caption = 'Button1'
+      OnClick = Button1Click
+      TabOrder = 0
+    end
   end
   object Panel2: TPanel
     Left = 0
@@ -56,7 +64,7 @@ object Form1: TForm1
     Color = clBlack
     ParentColor = False
     TabOrder = 1
-    OnMouseMove = Panel2MouseMove
+    OnResize = Panel2Resize
   end
   object MainMenu1: TMainMenu
     left = 62
@@ -98,5 +106,12 @@ object Form1: TForm1
       Caption = 'About'
       OnClick = MenuItem8Click
     end
+  end
+  object Refresher: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = RefresherTimer
+    left = 114
+    top = 13
   end
 end

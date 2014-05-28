@@ -3,12 +3,7 @@ program project1;
 {$mode objfpc}{$H+}
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
-  cthreads,
-  {$ENDIF}{$ENDIF}
-  Interfaces, // this includes the LCL widgetset
-  Forms, formMain, unitMinesweeper, unitMinesweeperDefines
-  { you can add units after this };
+  {$IFDEF LINUX} cthreads, cmem {$ENDIF} Interfaces, Forms, formMain, unitMinesweeper, unitMinesweeperDefines;
 
 {$R *.res}
 

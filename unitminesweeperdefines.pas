@@ -22,7 +22,7 @@ type
   TMinesweeperData = array of array of TMinesweeperCell;
   TMinesweeperSprites = array of TPicture;
   PCanvas = ^TCanvas;
-  PCustomControl = ^TCustomControl;
+  PPanel = ^TPanel;
 
 implementation
 
